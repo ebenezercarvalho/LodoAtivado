@@ -2,6 +2,8 @@ import streamlit as st
 import supabase
 from typing import Dict
 import pandas as pd
+# Importar o módulo de gráficos
+import graficos
 
 # Configuração da página com layout condicional
 if 'current_page' not in st.session_state:
@@ -11,7 +13,7 @@ if 'current_page' not in st.session_state:
 layout_mode = "wide" if st.session_state.get('layout_wide', False) else "centered"
 
 st.set_page_config(
-    page_title="Sistema de Microbiologia",
+    page_title="Lodos Ativados - Ipiranga",
     page_icon="🔬",
     layout=layout_mode
 )
@@ -145,11 +147,17 @@ with st.sidebar:
     else:
         # Menu simplificado para usuário não autenticado
         st.info("🔒 Área restrita")
-        st.session_state['current_page'] = 'Login'
+        
+        # Adicionar opção de Gráficos (acessível sem autenticação)
+        menu_options = ["Login", "Gráficos"]
+        selected_menu = st.radio("Navegação", menu_options)
+        
+        # Atualizar página atual com base na seleção
+        st.session_state['current_page'] = selected_menu
     
     # Rodapé da barra lateral
     st.divider()
-    st.caption("© 2025 Sistema de Microbiologia")
+    st.caption("© 2025 Ebenézer Carvalho")
 
 # Conteúdo principal baseado na página atual
 if st.session_state['current_page'] == 'Login':
@@ -177,6 +185,16 @@ if st.session_state['current_page'] == 'Login':
                     # Após login bem-sucedido, mude para layout wide
                     st.session_state['layout_wide'] = True
                     st.rerun()  # Recarregar para atualizar a interface
+
+elif st.session_state['current_page'] == 'Gráficos':
+    # Página de Gráficos (acessível sem autenticação)
+    # Configurar layout wide para melhor visualização dos gráficos
+    if not st.session_state.get('layout_wide', False):
+        st.session_state['layout_wide'] = True
+        st.rerun()
+    
+    # Chamar a função do módulo de gráficos para exibir o conteúdo
+    graficos.show_graficos()
 
 elif st.session_state['current_page'] == 'Dados':
     # Verificar se o usuário está autenticado
