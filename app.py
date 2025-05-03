@@ -5,17 +5,19 @@ import pandas as pd
 # Importar o módulo de gráficos
 import graficos
 
-# Configuração da página com layout condicional
+# Inicializar variáveis de estado se não existirem
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'Login'
 
-# Configurar layout com base na página atual
-layout_mode = "wide" if st.session_state.get('layout_wide', False) else "centered"
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
 
+# Configurar a página - DEVE ser a primeira chamada do Streamlit
+# IMPORTANTE: A página de login SEMPRE usa layout centered, outras páginas usam wide
 st.set_page_config(
     page_title="Lodos Ativados - Ipiranga",
     page_icon="🔬",
-    layout=layout_mode
+    layout="centered" if st.session_state['current_page'] == 'Login' else "wide"
 )
 
 # Configurações de estilo
@@ -105,22 +107,6 @@ def process_login(email, password):
         st.error(f"❌ Falha na autenticação: {result.get('error', 'Credenciais inválidas')}")
         return False
 
-# Iniciar sessão para controlar estado de login
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-
-# Iniciar sessão para controlar navegação
-if 'current_page' not in st.session_state:
-    st.session_state['current_page'] = 'Login'
-
-# Controle de layout para alternar entre modo centralizado e wide
-if 'layout_wide' not in st.session_state:
-    st.session_state['layout_wide'] = False
-    
-# Se estiver na página de dados, garanta que o layout seja wide
-if st.session_state['current_page'] == 'Dados':
-    st.session_state['layout_wide'] = True
-
 # Barra lateral para navegação
 with st.sidebar:
     st.title("🔬 Microbiologia")
@@ -136,13 +122,16 @@ with st.sidebar:
         selected_menu = st.radio("Navegação", menu_options)
         
         # Atualizar página atual com base na seleção
-        st.session_state['current_page'] = selected_menu
+        if st.session_state['current_page'] != selected_menu:
+            st.session_state['current_page'] = selected_menu
+            # Forçar recarregamento para atualizar o layout
+            st.rerun()
         
         # Botão de logout
         if st.button("Sair"):
             st.session_state['logged_in'] = False
             st.session_state['current_page'] = 'Login'
-            st.session_state['layout_wide'] = False
+            # Forçar recarregamento para atualizar o layout
             st.rerun()
     else:
         # Menu simplificado para usuário não autenticado
@@ -153,7 +142,10 @@ with st.sidebar:
         selected_menu = st.radio("Navegação", menu_options)
         
         # Atualizar página atual com base na seleção
-        st.session_state['current_page'] = selected_menu
+        if st.session_state['current_page'] != selected_menu:
+            st.session_state['current_page'] = selected_menu
+            # Forçar recarregamento para atualizar o layout
+            st.rerun()
     
     # Rodapé da barra lateral
     st.divider()
@@ -182,17 +174,11 @@ if st.session_state['current_page'] == 'Login':
             if login_button:
                 success = process_login(email, password)
                 if success:
-                    # Após login bem-sucedido, mude para layout wide
-                    st.session_state['layout_wide'] = True
-                    st.rerun()  # Recarregar para atualizar a interface
+                    # Recarregar para atualizar o layout e a interface
+                    st.rerun()
 
 elif st.session_state['current_page'] == 'Gráficos':
     # Página de Gráficos (acessível sem autenticação)
-    # Configurar layout wide para melhor visualização dos gráficos
-    if not st.session_state.get('layout_wide', False):
-        st.session_state['layout_wide'] = True
-        st.rerun()
-    
     # Chamar a função do módulo de gráficos para exibir o conteúdo
     graficos.show_graficos()
 
@@ -201,7 +187,7 @@ elif st.session_state['current_page'] == 'Dados':
     if not st.session_state['logged_in']:
         st.warning("Você precisa fazer login para acessar esta página.")
         st.session_state['current_page'] = 'Login'
-        st.session_state['layout_wide'] = False
+        # Recarregar para garantir que o layout seja atualizado para 'centered'
         st.rerun()
     
     # Página de Dados
