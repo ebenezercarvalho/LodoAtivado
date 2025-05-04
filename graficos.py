@@ -40,8 +40,8 @@ def show_graficos():
                 # Converter para DataFrame para visualização
                 df = pd.DataFrame(result["data"])
                 
-                # Criar abas para diferentes tipos de gráficos
-                tab1, tab2, tab3 = st.tabs(["Gráficos de Linha", "Gráficos de Barra", "Gráficos de Dispersão"])
+                # Criar abas para diferentes tipos de gráficos (removido gráfico de dispersão)
+                tab1, tab2 = st.tabs(["Gráficos de Linha", "Gráficos de Barra"])
                 
                 with tab1:
                     st.subheader("Gráficos de Linha")
@@ -49,6 +49,30 @@ def show_graficos():
                     numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
                     
                     if numeric_cols:
+                        # Converter a coluna de data para datetime se não estiver
+                        if 'dataamostra' in df.columns and df['dataamostra'].dtype != 'datetime64[ns]':
+                            df['dataamostra'] = pd.to_datetime(df['dataamostra'])
+                        
+                        # Inicializar a variável ponto_selecionado com valor padrão
+                        ponto_selecionado = "Todos os Pontos"
+                        
+                        # Filtro por ponto de amostra
+                        if 'pontoamostra' in df.columns:
+                            pontos_amostra = df['pontoamostra'].unique().tolist()
+                            ponto_selecionado = st.selectbox(
+                                "Filtrar por Ponto de Amostra",
+                                options=["Todos os Pontos"] + pontos_amostra
+                            )
+                            
+                            # Aplicar filtro se um ponto específico for selecionado
+                            if ponto_selecionado != "Todos os Pontos":
+                                df_filtrado = df[df['pontoamostra'] == ponto_selecionado]
+                            else:
+                                df_filtrado = df
+                        else:
+                            df_filtrado = df
+                            st.warning("Coluna 'pontoamostra' não encontrada para filtrar.")
+                        
                         # Permitir ao usuário selecionar colunas para o gráfico
                         selected_cols = st.multiselect(
                             "Selecione as colunas para visualizar",
@@ -57,15 +81,18 @@ def show_graficos():
                         )
                         
                         if selected_cols:
-                            # Verificar se há uma coluna de data para usar como eixo x
-                            date_cols = df.select_dtypes(include=['datetime']).columns.tolist()
-                            if date_cols:
-                                x_axis = st.selectbox("Selecione a coluna para o eixo X", date_cols)
-                                # Criar gráfico de linha
-                                fig = px.line(df, x=x_axis, y=selected_cols, title="Evolução ao longo do tempo")
+                            # Usar a coluna dataamostra como eixo X
+                            if 'dataamostra' in df_filtrado.columns:
+                                # Criar gráfico de linha com data no eixo X
+                                fig = px.line(df_filtrado, x='dataamostra', y=selected_cols, 
+                                             title="Evolução ao longo do tempo" + 
+                                             (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
+                                fig.update_xaxes(title="Data da Amostra")
                             else:
-                                # Se não houver coluna de data, usar índice
-                                fig = px.line(df, y=selected_cols, title="Evolução dos valores")
+                                st.warning("Coluna 'dataamostra' não encontrada. Usando índice como eixo X.")
+                                fig = px.line(df_filtrado, y=selected_cols, 
+                                             title="Evolução dos valores" + 
+                                             (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
                             
                             st.plotly_chart(fig, use_container_width=True)
                         else:
@@ -80,40 +107,40 @@ def show_graficos():
                     num_cols = df.select_dtypes(include=['number']).columns.tolist()
                     
                     if cat_cols and num_cols:
+                        # Inicializar a variável ponto_selecionado com valor padrão
+                        ponto_selecionado = "Todos os Pontos"
+                        
+                        # Filtro por ponto de amostra
+                        if 'pontoamostra' in df.columns:
+                            pontos_amostra = df['pontoamostra'].unique().tolist()
+                            ponto_selecionado = st.selectbox(
+                                "Filtrar por Ponto de Amostra",
+                                options=["Todos os Pontos"] + pontos_amostra,
+                                key="barra_ponto_amostra"  # Chave única para evitar conflito com o selectbox da aba anterior
+                            )
+                            
+                            # Aplicar filtro se um ponto específico for selecionado
+                            if ponto_selecionado != "Todos os Pontos":
+                                df_filtrado = df[df['pontoamostra'] == ponto_selecionado]
+                            else:
+                                df_filtrado = df
+                        else:
+                            df_filtrado = df
+                            st.warning("Coluna 'pontoamostra' não encontrada para filtrar.")
+                        
                         # Permitir ao usuário selecionar colunas para o gráfico
                         x_col = st.selectbox("Selecione a coluna categórica (eixo X)", cat_cols)
                         y_col = st.selectbox("Selecione a coluna numérica (eixo Y)", num_cols)
                         
                         # Criar gráfico de barras
-                        fig = px.bar(df, x=x_col, y=y_col, title=f"{y_col} por {x_col}")
+                        fig = px.bar(df_filtrado, x=x_col, y=y_col, 
+                                    title=f"{y_col} por {x_col}" + 
+                                    (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.info("São necessárias colunas categóricas e numéricas para criar gráficos de barra.")
                 
-                with tab3:
-                    st.subheader("Gráficos de Dispersão")
-                    # Verificar se há pelo menos duas colunas numéricas
-                    if len(num_cols) >= 2:
-                        # Permitir ao usuário selecionar colunas para o gráfico
-                        x_col = st.selectbox("Selecione a coluna para o eixo X", num_cols)
-                        y_col = st.selectbox("Selecione a coluna para o eixo Y", 
-                                             [col for col in num_cols if col != x_col] if len(num_cols) > 1 else num_cols)
-                        
-                        # Opção para adicionar uma terceira dimensão (tamanho)
-                        size_col = st.selectbox("Selecione a coluna para o tamanho dos pontos (opcional)", 
-                                               ["Nenhum"] + [col for col in num_cols if col != x_col and col != y_col])
-                        
-                        # Criar gráfico de dispersão
-                        if size_col != "Nenhum":
-                            fig = px.scatter(df, x=x_col, y=y_col, size=size_col, 
-                                           title=f"Relação entre {x_col} e {y_col} (tamanho: {size_col})")
-                        else:
-                            fig = px.scatter(df, x=x_col, y=y_col, 
-                                           title=f"Relação entre {x_col} e {y_col}")
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.info("São necessárias pelo menos duas colunas numéricas para criar gráficos de dispersão.")
+                # Gráfico de dispersão removido conforme solicitado
             else:
                 st.info("Nenhum dado encontrado na tabela de microbiologia para gerar gráficos.")
         else:
