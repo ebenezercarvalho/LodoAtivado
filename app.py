@@ -2,8 +2,9 @@ import streamlit as st
 import supabase
 from typing import Dict
 import pandas as pd
-# Importar o módulo de gráficos
+# Importar os módulos
 import graficos
+import formulario
 
 # Inicializar variáveis de estado se não existirem
 if 'current_page' not in st.session_state:
@@ -20,28 +21,11 @@ st.set_page_config(
     layout="centered" if st.session_state['current_page'] == 'Login' else "wide"
 )
 
-# Configurações de estilo
+# Configurações básicas de estilo
 st.markdown("""
     <style>
     .main {
         padding: 2rem;
-    }
-    .stButton button {
-        width: 100%;
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px;
-        font-weight: bold;
-        border-radius: 5px;
-    }
-    .login-container {
-        border: 1px solid #f0f0f0;
-        border-radius: 10px;
-        padding: 30px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        max-width: 450px;
-        margin: 50px auto;
-        background-color: white;
     }
     .centered-content {
         display: flex;
@@ -49,12 +33,17 @@ st.markdown("""
         align-items: center;
         min-height: 80vh;
     }
+    .login-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        max-width: 450px;
+        margin: 50px auto;
+    }
     .form-header {
         text-align: center;
         margin-bottom: 25px;
-    }
-    .sidebar .sidebar-content {
-        background-color: #f9f9f9;
     }
     </style>""", unsafe_allow_html=True)
 
@@ -99,7 +88,7 @@ def process_login(email, password):
     
     if result["success"]:
         st.session_state['logged_in'] = True
-        st.session_state['current_page'] = 'Dados'
+        st.session_state['current_page'] = 'Formulário'
         st.success("✅ Acesso autorizado!")
         st.balloons()  # Efeito visual de sucesso
         return True
@@ -109,7 +98,7 @@ def process_login(email, password):
 
 # Barra lateral para navegação
 with st.sidebar:
-    st.title("🔬 Microbiologia")
+    st.markdown("<h1>🔬 Microbiologia</h1>", unsafe_allow_html=True)
     st.divider()
     
     # Exibir menu de navegação com base no estado de login
@@ -118,8 +107,9 @@ with st.sidebar:
         st.success("✅ Autenticado")
         
         # Menu de navegação para usuário autenticado
-        menu_options = ["Dados"]
-        selected_menu = st.radio("Navegação", menu_options)
+        st.markdown("<p style='font-weight:bold;'>Navegação</p>", unsafe_allow_html=True)
+        menu_options = ["Formulário", "Gráficos"]
+        selected_menu = st.radio("", menu_options, label_visibility="collapsed")
         
         # Atualizar página atual com base na seleção
         if st.session_state['current_page'] != selected_menu:
@@ -127,7 +117,8 @@ with st.sidebar:
             # Forçar recarregamento para atualizar o layout
             st.rerun()
         
-        # Botão de logout
+        # Botão de logout sem estilo personalizado
+        
         if st.button("Sair"):
             st.session_state['logged_in'] = False
             st.session_state['current_page'] = 'Login'
@@ -182,7 +173,9 @@ elif st.session_state['current_page'] == 'Gráficos':
     # Chamar a função do módulo de gráficos para exibir o conteúdo
     graficos.show_graficos()
 
-elif st.session_state['current_page'] == 'Dados':
+# A seção 'Dados' foi removida pois os dados já são exibidos na página de gráficos
+
+elif st.session_state['current_page'] == 'Formulário':
     # Verificar se o usuário está autenticado
     if not st.session_state['logged_in']:
         st.warning("Você precisa fazer login para acessar esta página.")
@@ -190,61 +183,5 @@ elif st.session_state['current_page'] == 'Dados':
         # Recarregar para garantir que o layout seja atualizado para 'centered'
         st.rerun()
     
-    # Página de Dados
-    st.title("Dados de Microbiologia")
-    st.write("Visualize e analise os dados da tabela de microbiologia.")
-    
-    # Exibir spinner durante o carregamento dos dados
-    with st.spinner("Carregando dados..."):
-        # Inicializar conexão Supabase
-        supabase_client = init_connection()
-        
-        # Buscar dados da tabela microbiologia
-        result = fetch_microbiologia_data(supabase_client)
-        
-        if result["success"]:
-            if result["data"]:
-                # Converter para DataFrame para melhor visualização
-                df = pd.DataFrame(result["data"])
-                
-                # Criar colunas para layout
-                col1, col2 = st.columns([2, 1])
-                
-                with col1:
-                    # Adicionar filtros e busca
-                    st.text_input("Filtrar dados", key="filter_text", 
-                                 placeholder="Digite para filtrar...")
-                
-                with col2:
-                    # Adicionar opção de download
-                    if len(result["data"]) > 0:
-                        csv = df.to_csv(index=False).encode('utf-8')
-                        st.download_button(
-                            label="📥 Download CSV",
-                            data=csv,
-                            file_name="microbiologia_data.csv",
-                            mime="text/csv",
-                        )
-                
-                # Aplicar filtro se houver texto de filtro
-                if "filter_text" in st.session_state and st.session_state.filter_text:
-                    filter_text = st.session_state.filter_text.lower()
-                    filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(filter_text, case=False).any(), axis=1)]
-                    st.dataframe(filtered_df, use_container_width=True)
-                else:
-                    st.dataframe(df, use_container_width=True)
-                
-                # Mostrar estatísticas básicas
-                st.subheader("Resumo dos Dados")
-                st.info(f"Total de registros: {len(df)}")
-                
-                # Exibir estatísticas numéricas se houver colunas numéricas
-                numeric_cols = df.select_dtypes(include=['number']).columns
-                if len(numeric_cols) > 0:
-                    st.write("Estatísticas das colunas numéricas:")
-                    st.dataframe(df[numeric_cols].describe(), use_container_width=True)
-                
-            else:
-                st.info("Nenhum dado encontrado na tabela de microbiologia.")
-        else:
-            st.error(f"Erro ao buscar dados: {result.get('error')}")
+    # Exibir o formulário de inserção de dados
+    formulario.show_formulario()

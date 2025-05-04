@@ -127,3 +127,49 @@ def show_graficos():
     
     Para uma análise mais detalhada, você pode selecionar diferentes colunas e tipos de gráficos nas abas acima.
     """)
+    
+    # Adicionar exibição da tabela de dados abaixo dos gráficos
+    st.divider()
+    st.subheader("Tabela de Dados")
+    st.write("Visualize os dados completos da tabela de microbiologia.")
+    
+    if result["success"] and result["data"]:
+        # Converter para DataFrame para visualização se ainda não foi feito
+        df = pd.DataFrame(result["data"])
+        
+        # Criar colunas para layout
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            # Adicionar filtros e busca
+            st.text_input("Filtrar dados", key="filter_text_graficos", 
+                         placeholder="Digite para filtrar...")
+        
+        with col2:
+            # Adicionar opção de download
+            if len(result["data"]) > 0:
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv,
+                    file_name="microbiologia_data.csv",
+                    mime="text/csv",
+                )
+        
+        # Aplicar filtro se houver texto de filtro
+        if "filter_text_graficos" in st.session_state and st.session_state.filter_text_graficos:
+            filter_text = st.session_state.filter_text_graficos.lower()
+            filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(filter_text, case=False).any(), axis=1)]
+            st.dataframe(filtered_df, use_container_width=True)
+        else:
+            st.dataframe(df, use_container_width=True)
+        
+        # Mostrar estatísticas básicas
+        st.subheader("Resumo dos Dados")
+        st.info(f"Total de registros: {len(df)}")
+        
+        # Exibir estatísticas numéricas se houver colunas numéricas
+        numeric_cols = df.select_dtypes(include=['number']).columns
+        if len(numeric_cols) > 0:
+            st.write("Estatísticas das colunas numéricas:")
+            st.dataframe(df[numeric_cols].describe(), use_container_width=True)
