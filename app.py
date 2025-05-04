@@ -40,10 +40,40 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(0,0,0,0.1);
         max-width: 450px;
         margin: 50px auto;
+        background-color: rgba(255, 255, 255, 0.95);
+        position: relative;
+        z-index: 1;
     }
     .form-header {
         text-align: center;
         margin-bottom: 25px;
+    }
+    
+    /* Estilo para a página de login */
+    [data-testid="stAppViewContainer"] {
+        background-image: url('https://raw.githubusercontent.com/ebenezercarvalho/LodoAtivado/main/assets/microscope-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    
+    /* Overlay escuro para melhorar o contraste */
+    [data-testid="stAppViewContainer"]::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 0;
+    }
+    
+    /* Ajuste para o conteúdo principal */
+    .main .block-container {
+        position: relative;
+        z-index: 1;
     }
     </style>""", unsafe_allow_html=True)
 
