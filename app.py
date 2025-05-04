@@ -40,9 +40,7 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(0,0,0,0.1);
         max-width: 450px;
         margin: 50px auto;
-        background-color: rgba(255, 255, 255, 0.95);
-        position: relative;
-        z-index: 1;
+        background-color: #ffffff;
     }
     .form-header {
         text-align: center;
@@ -50,30 +48,38 @@ st.markdown("""
     }
     
     /* Estilo para a página de login */
-    [data-testid="stAppViewContainer"] {
+    div[data-testid="stAppViewContainer"] {
         background-image: url('https://raw.githubusercontent.com/ebenezercarvalho/LodoAtivado/main/assets/microscope-bg.jpg');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
+        filter: grayscale(0.0);
     }
     
     /* Overlay escuro para melhorar o contraste */
-    [data-testid="stAppViewContainer"]::before {
+    div[data-testid="stAppViewContainer"]::before {
         content: '';
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.85);
-        z-index: 0;
+        background-color: rgba(0, 0, 0, 0.92);
+        pointer-events: none;
     }
     
     /* Ajuste para o conteúdo principal */
-    .main .block-container {
+    div[data-testid="stAppViewContainer"] > div {
         position: relative;
         z-index: 1;
+    }
+    
+    /* Ajuste para o container de login */
+    div[data-testid="stAppViewContainer"] .login-container {
+        background-color: #ffffff;
+        position: relative;
+        z-index: 2;
     }
     </style>""", unsafe_allow_html=True)
 
