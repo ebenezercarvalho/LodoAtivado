@@ -73,21 +73,48 @@ def show_graficos():
                             df_filtrado = df
                             st.warning("Coluna 'pontoamostra' não encontrada para filtrar.")
                         
+                        # Adicionar filtro de data
+                        if 'dataamostra' in df_filtrado.columns:
+                            # Converter para datetime se necessário
+                            if df_filtrado['dataamostra'].dtype != 'datetime64[ns]':
+                                df_filtrado['dataamostra'] = pd.to_datetime(df_filtrado['dataamostra'])
+                            
+                            # Obter datas mínima e máxima
+                            min_date = df_filtrado['dataamostra'].min()
+                            max_date = df_filtrado['dataamostra'].max()
+                            
+                            # Criar filtro de data
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                start_date = st.date_input("Data Inicial", min_date)
+                            with col2:
+                                end_date = st.date_input("Data Final", max_date)
+                            
+                            # Aplicar filtro de data
+                            df_filtrado = df_filtrado[
+                                (df_filtrado['dataamostra'].dt.date >= start_date) &
+                                (df_filtrado['dataamostra'].dt.date <= end_date)
+                            ]
+                        
                         # Permitir ao usuário selecionar colunas para o gráfico
                         selected_cols = st.multiselect(
                             "Selecione as colunas para visualizar",
                             options=numeric_cols,
-                            default=numeric_cols[:1] if numeric_cols else None
+                            default=['ciliadoslivres'] if 'ciliadoslivres' in numeric_cols else numeric_cols[:1] if numeric_cols else None
                         )
                         
                         if selected_cols:
                             # Usar a coluna dataamostra como eixo X
                             if 'dataamostra' in df_filtrado.columns:
+                                # Agrupar por data e somar os valores
+                                df_agrupado = df_filtrado.groupby('dataamostra')[selected_cols].sum().reset_index()
+                                
                                 # Criar gráfico de linha com data no eixo X
-                                fig = px.line(df_filtrado, x='dataamostra', y=selected_cols, 
+                                fig = px.line(df_agrupado, x='dataamostra', y=selected_cols, 
                                              title="Evolução ao longo do tempo" + 
                                              (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
                                 fig.update_xaxes(title="Data da Amostra")
+                                fig.update_yaxes(title="Somatório")
                             else:
                                 st.warning("Coluna 'dataamostra' não encontrada. Usando índice como eixo X.")
                                 fig = px.line(df_filtrado, y=selected_cols, 
@@ -116,7 +143,7 @@ def show_graficos():
                             ponto_selecionado = st.selectbox(
                                 "Filtrar por Ponto de Amostra",
                                 options=["Todos os Pontos"] + pontos_amostra,
-                                key="barra_ponto_amostra"  # Chave única para evitar conflito com o selectbox da aba anterior
+                                key="barra_ponto_amostra"
                             )
                             
                             # Aplicar filtro se um ponto específico for selecionado
@@ -127,15 +154,44 @@ def show_graficos():
                         else:
                             df_filtrado = df
                             st.warning("Coluna 'pontoamostra' não encontrada para filtrar.")
+
+                        # Adicionar filtro de data
+                        if 'dataamostra' in df_filtrado.columns:
+                            # Converter para datetime se necessário
+                            if df_filtrado['dataamostra'].dtype != 'datetime64[ns]':
+                                df_filtrado['dataamostra'] = pd.to_datetime(df_filtrado['dataamostra'])
+                            
+                            # Obter datas mínima e máxima
+                            min_date = df_filtrado['dataamostra'].min()
+                            max_date = df_filtrado['dataamostra'].max()
+                            
+                            # Criar filtro de data
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                start_date = st.date_input("Data Inicial", min_date, key="barra_start_date")
+                            with col2:
+                                end_date = st.date_input("Data Final", max_date, key="barra_end_date")
+                            
+                            # Aplicar filtro de data
+                            df_filtrado = df_filtrado[
+                                (df_filtrado['dataamostra'].dt.date >= start_date) &
+                                (df_filtrado['dataamostra'].dt.date <= end_date)
+                            ]
                         
                         # Permitir ao usuário selecionar colunas para o gráfico
-                        x_col = st.selectbox("Selecione a coluna categórica (eixo X)", cat_cols)
-                        y_col = st.selectbox("Selecione a coluna numérica (eixo Y)", num_cols)
+                        y_col = st.selectbox("Selecione a coluna numérica (eixo Y)", 
+                                           num_cols,
+                                           index=num_cols.index('ciliadoslivres') if 'ciliadoslivres' in num_cols else 0)
                         
                         # Criar gráfico de barras
-                        fig = px.bar(df_filtrado, x=x_col, y=y_col, 
-                                    title=f"{y_col} por {x_col}" + 
+                        fig = px.bar(df_filtrado, x='dataamostra', y=y_col, 
+                                    title=f"{y_col} por Data" + 
                                     (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
+                        
+                        # Formatar as datas no eixo X
+                        fig.update_xaxes(tickformat="%d/%m/%Y", title="Data da Amostra")
+                        fig.update_yaxes(title=y_col)
+                        
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.info("São necessárias colunas categóricas e numéricas para criar gráficos de barra.")
@@ -165,31 +221,36 @@ def show_graficos():
         df = pd.DataFrame(result["data"])
         
         # Criar colunas para layout
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns(2)
         
         with col1:
-            # Adicionar filtros e busca
-            st.text_input("Filtrar dados", key="filter_text_graficos", 
-                         placeholder="Digite para filtrar...")
+            # Adicionar filtro de data
+            if 'dataamostra' in df.columns:
+                # Converter para datetime se necessário
+                if df['dataamostra'].dtype != 'datetime64[ns]':
+                    df['dataamostra'] = pd.to_datetime(df['dataamostra'])
+                
+                # Obter datas mínima e máxima
+                min_date = df['dataamostra'].min()
+                max_date = df['dataamostra'].max()
+                
+                # Criar filtro de data
+                start_date = st.date_input("Data Inicial", min_date, key="tabela_start_date")
         
         with col2:
-            # Adicionar opção de download
-            if len(result["data"]) > 0:
-                csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Download CSV",
-                    data=csv,
-                    file_name="microbiologia_data.csv",
-                    mime="text/csv",
-                )
+            # Continuar o filtro de data
+            if 'dataamostra' in df.columns:
+                end_date = st.date_input("Data Final", max_date, key="tabela_end_date")
         
-        # Aplicar filtro se houver texto de filtro
-        if "filter_text_graficos" in st.session_state and st.session_state.filter_text_graficos:
-            filter_text = st.session_state.filter_text_graficos.lower()
-            filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(filter_text, case=False).any(), axis=1)]
-            st.dataframe(filtered_df, use_container_width=True)
-        else:
-            st.dataframe(df, use_container_width=True)
+        # Aplicar filtro de data
+        if 'dataamostra' in df.columns:
+            df = df[
+                (df['dataamostra'].dt.date >= start_date) &
+                (df['dataamostra'].dt.date <= end_date)
+            ]
+        
+        # Exibir a tabela
+        st.dataframe(df, use_container_width=True)
         
         # Mostrar estatísticas básicas
         st.subheader("Resumo dos Dados")
