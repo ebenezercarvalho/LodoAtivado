@@ -16,7 +16,7 @@ if 'logged_in' not in st.session_state:
 # Configurar a página - DEVE ser a primeira chamada do Streamlit
 # IMPORTANTE: A página de login SEMPRE usa layout centered, outras páginas usam wide
 st.set_page_config(
-    page_title="Lodos Ativados - Ipiranga",
+    page_title="Lodos Ativados - CAAN",
     page_icon="🔬",
     layout="centered" if st.session_state['current_page'] == 'Login' else "wide"
 )
@@ -117,8 +117,7 @@ with st.sidebar:
             # Forçar recarregamento para atualizar o layout
             st.rerun()
         
-        # Botão de logout sem estilo personalizado
-        
+                
         if st.button("Sair"):
             st.session_state['logged_in'] = False
             st.session_state['current_page'] = 'Login'

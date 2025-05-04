@@ -27,7 +27,7 @@ def show_formulario():
 
     
     st.title("Formulário de Registro de Microbiologia")
-    st.write("Preencha os campos abaixo para adicionar um novo registro à tabela de microbiologia.")
+    st.write("Preencha os campos abaixo para adicionar um novo registro à tabela.")
     
     # Criar formulário usando st.form para capturar todos os campos de uma vez
     with st.form(key="microbiologia_form"):
@@ -108,7 +108,7 @@ def show_formulario():
         
         with col2:
             divers_rot = st.number_input("Diversidade de Rotíferos", min_value=0, step=1)
-            divers_nemat = st.number_input("Diversidade de Nemato", min_value=0, step=1)
+            divers_nemat = st.number_input("Diversidade de Nematodos", min_value=0, step=1)
         
         # Campo para quantidade de filamentos
         ident_filament = st.selectbox(
@@ -134,11 +134,11 @@ def show_formulario():
             "aspectofloco": aspecto_floco,
             "ciliadoslivres": ciliados_livres,
             "ciliadosfixos": ciliados_fixos,
-            "coloniasfixos": colonias_fixos,  # Corrigido: removido acento
+            "coloniasfixos": colonias_fixos,  
             "amebasteca": amebas_teca,
-            "amebasnuas": amebas_nuas,  # Corrigido: singular em vez de plural
+            "amebasnuas": amebas_nuas,  
             "flagelados": flagelados,
-            "rotiferos": rotiferos,  # Corrigido: removido acento
+            "rotiferos": rotiferos,  
             "tardigrados": tardigrados,
             "nemato": nemato,
             "filamentos": filamentos,
