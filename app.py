@@ -81,6 +81,22 @@ st.markdown("""
         position: relative;
         z-index: 2;
     }
+    /* Garantir que o controle de expandir/recolher da sidebar esteja visível */
+    section[data-testid="stSidebar"] [data-testid="collapsedControl"],
+    div[data-testid="stSidebar"] [data-testid="collapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        z-index: 9999 !important;
+    }
+    /* Garantir que a sidebar não esteja oculta ou sobreposta */
+    section[data-testid="stSidebar"],
+    div[data-testid="stSidebar"] {
+        overflow: visible !important;
+        z-index: 999 !important;
+    }
     </style>""", unsafe_allow_html=True)
 
 # Função para inicializar conexão com Supabase
@@ -154,7 +170,7 @@ with st.sidebar:
             st.rerun()
         
                 
-        if st.button("Sair"):
+        if st.button("Sair", key="logout_btn", help="Clique para sair", use_container_width=True):
             st.session_state['logged_in'] = False
             st.session_state['current_page'] = 'Login'
             # Forçar recarregamento para atualizar o layout

@@ -110,55 +110,43 @@ def show_graficos():
                                 
                                 st.rerun()
                         
-                        # Aplicar filtro se um ponto específico for selecionado
-                        if ponto_selecionado != "Todos os Pontos":
-                            df_filtrado = df[df['pontoamostra'] == ponto_selecionado]
-                        else:
-                            df_filtrado = df
-                        
-                        # Aplicar filtro de data
-                        if 'dataamostra' in df_filtrado.columns:
-                            # Se não houver data inicial no estado, usar 6 meses atrás
-                            if 'grafico_start_date' not in st.session_state:
-                                st.session_state.grafico_start_date = six_months_ago
-                            # Se não houver data final no estado, usar a data mais recente
-                            if 'grafico_end_date' not in st.session_state:
-                                st.session_state.grafico_end_date = max_date
-                            
-                            # Aplicar filtro de data
-                            df_filtrado = df_filtrado[
-                                (df_filtrado['dataamostra'].dt.date >= st.session_state.grafico_start_date) &
-                                (df_filtrado['dataamostra'].dt.date <= st.session_state.grafico_end_date)
-                            ]
-                        
                         # Permitir ao usuário selecionar colunas para o gráfico
                         selected_cols = st.multiselect(
-                            "Selecione as colunas para visualizar",
+                            "Selecione os microrganismos para visualizar",
                             options=numeric_cols,
                             default=['ciliadoslivres'] if 'ciliadoslivres' in numeric_cols else numeric_cols[:1] if numeric_cols else None
                         )
                         
                         if selected_cols:
-                            # Usar a coluna dataamostra como eixo X
-                            if 'dataamostra' in df_filtrado.columns:
-                                # Agrupar por data e somar os valores
-                                df_agrupado = df_filtrado.groupby('dataamostra')[selected_cols].sum().reset_index()
-                                
-                                # Criar gráfico de linha com data no eixo X
-                                fig = px.line(df_agrupado, x='dataamostra', y=selected_cols, 
-                                             title="Evolução ao longo do tempo" + 
-                                             (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
-                                fig.update_xaxes(title="Data da Amostra")
-                                fig.update_yaxes(title="Somatório")
+                            # Aplicar filtro se um ponto específico for selecionado
+                            if ponto_selecionado != "Todos os Pontos":
+                                df_filtrado = df[df['pontoamostra'] == ponto_selecionado]
                             else:
-                                st.warning("Coluna 'dataamostra' não encontrada. Usando índice como eixo X.")
-                                fig = px.line(df_filtrado, y=selected_cols, 
-                                             title="Evolução dos valores" + 
-                                             (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
-                            
+                                df_filtrado = df
+                            # Agrupar por data e somar os valores das colunas selecionadas
+                            if 'dataamostra' in df_filtrado.columns:
+                                df_agrupado = df_filtrado.groupby('dataamostra')[selected_cols].sum().reset_index()
+                            else:
+                                df_agrupado = df_filtrado
+                            # Aplicar filtro de data
+                            if 'dataamostra' in df_agrupado.columns:
+                                if 'grafico_start_date' not in st.session_state:
+                                    st.session_state.grafico_start_date = six_months_ago
+                                if 'grafico_end_date' not in st.session_state:
+                                    st.session_state.grafico_end_date = max_date
+                                df_agrupado = df_agrupado[
+                                    (df_agrupado['dataamostra'].dt.date >= st.session_state.grafico_start_date) &
+                                    (df_agrupado['dataamostra'].dt.date <= st.session_state.grafico_end_date)
+                                ]
+                            # Criar gráfico de linha com data no eixo X
+                            fig = px.line(df_agrupado, x='dataamostra', y=selected_cols, 
+                                         title="Evolução ao longo do tempo" + 
+                                         (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
+                            fig.update_xaxes(title="Data da Amostra")
+                            fig.update_yaxes(title="Somatório")
                             st.plotly_chart(fig, use_container_width=True)
                         else:
-                            st.info("Selecione pelo menos uma coluna para visualizar o gráfico.")
+                            st.info("Selecione pelo menos um microrganismo para visualizar o gráfico.")
                     else:
                         st.info("Não foram encontradas colunas numéricas para criar gráficos.")
                 
@@ -245,18 +233,30 @@ def show_graficos():
                                 (df_filtrado['dataamostra'].dt.date <= st.session_state.grafico_barra_end_date)
                             ]
                         
-                        # Permitir ao usuário selecionar colunas para o gráfico
-                        y_col = st.selectbox("Selecione a coluna numérica (eixo Y)", 
-                                           num_cols,
-                                           index=num_cols.index('ciliadoslivres') if 'ciliadoslivres' in num_cols else 0)
-                        
-                        # Criar gráfico de barras
-                        fig = px.bar(df_filtrado, x='dataamostra', y=y_col, 
-                                    title=f"{y_col} por Data" + 
-                                    (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
+                        # Agrupar por data e ponto de amostra e somar os valores numéricos
+                        if 'dataamostra' in df_filtrado.columns and 'pontoamostra' in df_filtrado.columns:
+                            y_col = st.selectbox("Selecione a coluna numérica (eixo Y)", 
+                                               num_cols,
+                                               index=num_cols.index('ciliadoslivres') if 'ciliadoslivres' in num_cols else 0)
+                            df_agrupado = df_filtrado.groupby(['dataamostra', 'pontoamostra'])[y_col].sum().reset_index()
+                            # Se um ponto específico foi selecionado, filtrar e usar apenas a data no eixo X
+                            if ponto_selecionado != "Todos os Pontos":
+                                df_agrupado = df_agrupado[df_agrupado['pontoamostra'] == ponto_selecionado]
+                                x_axis = df_agrupado['dataamostra']
+                            else:
+                                # Combinar data e ponto para o eixo X
+                                df_agrupado['data_ponto'] = df_agrupado['dataamostra'].dt.strftime('%d/%m/%Y') + ' - ' + df_agrupado['pontoamostra']
+                                x_axis = df_agrupado['data_ponto']
+                            fig = px.bar(df_agrupado, x=x_axis, y=y_col, 
+                                        title=f"{y_col} por Data" + 
+                                        (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
+                        else:
+                            fig = px.bar(df_filtrado, x='dataamostra', y=y_col, 
+                                        title=f"{y_col} por Data" + 
+                                        (f" - {ponto_selecionado}" if ponto_selecionado != "Todos os Pontos" else ""))
                         
                         # Formatar as datas no eixo X
-                        fig.update_xaxes(tickformat="%d/%m/%Y", title="Data da Amostra")
+                        fig.update_xaxes(title="Data da Amostra")
                         fig.update_yaxes(title=y_col)
                         
                         st.plotly_chart(fig, use_container_width=True)

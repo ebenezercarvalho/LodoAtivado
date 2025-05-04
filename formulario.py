@@ -159,7 +159,7 @@ def show_formulario():
             
             if result["success"]:
                 st.success("✅ Registro adicionado com sucesso!")
-                st.balloons()  # Efeito visual de sucesso
+                #st.balloons()  # Efeito visual de sucesso
             else:
                 st.error(f"❌ Erro ao adicionar registro: {result.get('error')}")
                 st.info("Verifique se todos os campos foram preenchidos corretamente.")
