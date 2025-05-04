@@ -34,7 +34,9 @@ ENV/
 *.swo
 
 # Streamlit
+.streamlit/
 .streamlit/secrets.toml
+streamlit_app.txt
 
 # OS
 .DS_Store
