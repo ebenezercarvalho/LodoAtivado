@@ -1,15 +1,5 @@
-# Arquivo: requirements.txt
-# Fixar versões específicas para evitar incompatibilidades
-
-# Versão específica do supabase e suas dependências
-supabase==1.0.3
-gotrue==1.0.2
-httpx==0.24.1
-pydantic==1.10.8
-
-# Streamlit e outras dependências do projeto
-streamlit==1.31.0
-pandas==2.0.3
-plotly==5.14.1
-
-# Adicione outras bibliotecas específicas do seu projeto com suas versões
+streamlit
+supabase
+pandas
+plotly
+python-dotenv
