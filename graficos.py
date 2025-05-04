@@ -24,8 +24,8 @@ def fetch_microbiologia_data(client):
 
 # Função principal para exibir a página de gráficos
 def show_graficos():
-    st.title("Gráficos de Microbiologia")
-    st.write("Visualize os dados de microbiologia em formato gráfico.")
+    st.title("Informações da Microbiologia de Lodos Ativados")
+    st.write("Selecione abaixo o tipo de gráfico que deseja visualizar e filtre os dados conforme necessário.")
     
     # Exibir spinner durante o carregamento dos dados
     with st.spinner("Carregando dados para gráficos..."):
@@ -203,13 +203,13 @@ def show_graficos():
             st.error(f"Erro ao buscar dados: {result.get('error')}")
     
     # Adicionar informações adicionais
-    st.subheader("Sobre os Gráficos")
-    st.write("""
-    Esta seção apresenta visualizações gráficas dos dados de microbiologia. 
-    Os gráficos são gerados dinamicamente com base nos dados disponíveis no banco de dados.
+    # st.subheader("Sobre os Gráficos")
+    # st.write("""
+    # Esta seção apresenta visualizações gráficas dos dados de microbiologia. 
+    # Os gráficos são gerados dinamicamente com base nos dados disponíveis no banco de dados.
     
-    Para uma análise mais detalhada, você pode selecionar diferentes colunas e tipos de gráficos nas abas acima.
-    """)
+    # Para uma análise mais detalhada, você pode selecionar diferentes colunas e tipos de gráficos nas abas acima.
+    # """)
     
     # Adicionar exibição da tabela de dados abaixo dos gráficos
     st.divider()

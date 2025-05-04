@@ -98,7 +98,7 @@ def process_login(email, password):
 
 # Barra lateral para navegação
 with st.sidebar:
-    st.markdown("<h1>🔬 Microbiologia</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🔬 Lodos Ativados</h1>", unsafe_allow_html=True)
     st.divider()
     
     # Exibir menu de navegação com base no estado de login
