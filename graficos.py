@@ -291,33 +291,27 @@ def show_graficos():
         col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
         
         with col1:
-            # Adicionar filtro de data
-            if 'dataamostra' in df.columns:
-                # Converter para datetime se necessário
-                if df['dataamostra'].dtype != 'datetime64[ns]':
-                    df['dataamostra'] = pd.to_datetime(df['dataamostra'])
-                
-                # Obter datas mínima e máxima
-                min_date = df['dataamostra'].min()
-                max_date = df['dataamostra'].max()
-                
-                # Criar filtro de data
-                start_date = st.date_input("Data Inicial", min_date, key="tabela_start_date")
-        
-        with col2:
-            # Continuar o filtro de data
-            if 'dataamostra' in df.columns:
-                end_date = st.date_input("Data Final", max_date, key="tabela_end_date")
-        
-        with col3:
             # Adicionar filtro por Ponto de Amostra
             if 'pontoamostra' in df.columns:
                 pontos_amostra = ["Todos os Pontos"] + sorted(df['pontoamostra'].unique().tolist())
                 ponto_selecionado = st.selectbox(
-                    "Ponto de Amostra",
+                    "Filtrar por Ponto de Amostra",
                     options=pontos_amostra,
                     key="tabela_ponto_amostra"
                 )
+        with col2:
+            # Adicionar filtro de data inicial
+            if 'dataamostra' in df.columns:
+                # Converter para datetime se necessário
+                if df['dataamostra'].dtype != 'datetime64[ns]':
+                    df['dataamostra'] = pd.to_datetime(df['dataamostra'])
+                min_date = df['dataamostra'].min()
+                start_date = st.date_input("Data Inicial", min_date, key="tabela_start_date")
+        with col3:
+            # Adicionar filtro de data final
+            if 'dataamostra' in df.columns:
+                max_date = df['dataamostra'].max()
+                end_date = st.date_input("Data Final", max_date, key="tabela_end_date")
         
         with col4:
             # Espaçamento para alinhar com os outros campos
