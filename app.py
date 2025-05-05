@@ -91,7 +91,6 @@ st.markdown("""
         visibility: visible !important;
         z-index: 9999 !important;
     }
-    /* Garantir que a sidebar não esteja oculta ou sobreposta */
     section[data-testid="stSidebar"],
     div[data-testid="stSidebar"] {
         overflow: visible !important;
