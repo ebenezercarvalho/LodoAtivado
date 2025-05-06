@@ -42,6 +42,7 @@ def show_formulario():
             options=[
                 "Ipiranga - Reator 1",
                 "Ipiranga - Reator 2",
+                "Ipiranga - Reator 3",
                 "Nissan - Tanque de aeração 1",
                 "Nissan - Tanque de aeração 2"
             ]
@@ -86,7 +87,7 @@ def show_formulario():
         with col3:
             rotiferos = st.number_input("Rotíferos", min_value=0, step=1)
             tardigrados = st.number_input("Tardígrados", min_value=0, step=1)
-            nemato = st.number_input("Nemato", min_value=0, step=1)
+            nemato = st.number_input("Nematódeos", min_value=0, step=1)
         
         # Campo para filamentosa identificada
         filamentos = st.selectbox(
